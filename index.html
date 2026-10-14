@@ -75,13 +75,15 @@ body[data-view="pass"] .logo,body[data-view="done"] .logo{width:92px;height:66px
 .input{width:100%;font:inherit;font-size:17px;padding:14px;border-radius:13px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);outline:none;transition:border-color .15s,background .15s;-webkit-appearance:none;appearance:none}
 .input:focus{border-color:var(--focus);background:var(--card)}
 .code-input{text-align:center;font-size:32px;font-weight:700;letter-spacing:.45em;padding-left:calc(14px + .45em);font-variant-numeric:tabular-nums}
-.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;margin-top:12px;border:0;border-radius:14px;font:inherit;font-size:16px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-decoration:none;transition:transform .1s,opacity .15s}
+.btn{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:54px;margin-top:12px;border:0;border-radius:14px;font:inherit;font-size:16px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:transform .1s}
 .btn:active{transform:scale(.985)}
 .btn:disabled{opacity:.55;cursor:default}
 .btn.primary{background:var(--clay);color:#fff}
 .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
 .btn.confirm{background:var(--ok);color:#fff}
-.btn.is-busy::after{content:"";width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:spin .7s linear infinite}
+/* 送信中：文字を消して中央にスピナー（文字の位置がずれない） */
+.btn.is-busy,.btn.is-busy:disabled{color:transparent;opacity:1;cursor:wait}
+.btn.is-busy::after{content:"";position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:2.5px solid #fff;border-right-color:transparent;animation:spin .7s linear infinite}
 .msg{color:var(--warn);font-size:13px;margin:10px 0 0;font-weight:500}
 .msg.ok{color:var(--ok)}
 .msg:empty{display:none}
@@ -192,6 +194,12 @@ body[data-view="pass"] .logo,body[data-view="done"] .logo{width:92px;height:66px
 .store-card dt{color:var(--sub)}
 .store-card dd{margin:0;overflow-wrap:anywhere}
 .store-links{display:flex;flex-wrap:wrap;gap:8px}
+.ig-btn{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:13px 16px;border-radius:14px;background:var(--ink);color:var(--bg);text-decoration:none;-webkit-tap-highlight-color:transparent}
+.ig-btn:active{transform:scale(.985)}
+.ig-txt{min-width:0}
+.ig-txt b{display:block;font-size:15px;letter-spacing:.04em}
+.ig-txt small{display:block;font-size:12px;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ig-btn svg{width:18px;height:18px;flex:none}
 footer{text-align:center;font-size:11px;color:var(--faint);margin-top:36px;letter-spacing:.06em}
 
 /* ---------- modal ---------- */
@@ -416,6 +424,10 @@ footer{text-align:center;font-size:11px;color:var(--faint);margin-top:36px;lette
         <p class="store-name" id="storeName"></p>
         <p class="store-msg" id="storeMsg" hidden></p>
         <dl id="storeDl"></dl>
+        <a class="ig-btn" id="igBtn" target="_blank" rel="noopener" hidden>
+          <span class="ig-txt"><b>Instagramを見る</b><small id="igSub">メニュー・最新情報</small></span>
+          <svg aria-hidden="true"><use href="#ext"/></svg>
+        </a>
         <div class="store-links" id="storeLinks"></div>
       </div>
     </section>
@@ -635,6 +647,14 @@ function renderStore(st) {
   if (safeUrl(st.mapUrl)) links.push('<a class="btn-sm" href="' + esc(st.mapUrl) + '" target="_blank" rel="noopener">地図を開く<svg><use href="#ext"/></svg></a>');
   if (safeUrl(st.siteUrl)) links.push('<a class="btn-sm" href="' + esc(st.siteUrl) + '" target="_blank" rel="noopener">公式サイト・予約<svg><use href="#ext"/></svg></a>');
   $('#storeLinks').innerHTML = links.join('');
+  const ig = safeUrl(st.instagram), igBtn = $('#igBtn');
+  igBtn.hidden = !ig;
+  if (ig) {
+    igBtn.href = ig;
+    const h = ig.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+    const handle = h && !/^(p|reel|reels|explore|stories|tv)$/i.test(h[1]) ? '@' + h[1] : '';
+    $('#igSub').textContent = (handle ? handle + '・' : '') + 'メニュー・最新情報';
+  }
 }
 
 /* ---------------- STEP1 メール ---------------- */
@@ -968,9 +988,9 @@ const DEMO_DB = {
   },
   stores: [
     { id: 'shibuya', name: '土鍋ご飯いくしか 渋谷PARCO店', address: '（見本）スプレッドシート「店舗」シートの住所が入ります', hours: '（見本）営業時間が入ります',
-      holiday: '', tel: '', mapUrl: '', siteUrl: '', message: 'ご予約は承っておりません。直接ご来店ください。', pinRequired: false },
+      holiday: '', tel: '', mapUrl: '', siteUrl: '', instagram: 'https://www.instagram.com/', message: 'ご予約は承っておりません。直接ご来店ください。', pinRequired: false },
     { id: 'nakameguro', name: '土鍋ご飯いくしか 中目黒店', address: '（見本）スプレッドシート「店舗」シートの住所が入ります', hours: '（見本）営業時間が入ります',
-      holiday: '', tel: '', mapUrl: '', siteUrl: '', message: 'ご予約はTableCheckから承っております。', pinRequired: false },
+      holiday: '', tel: '', mapUrl: '', siteUrl: '', instagram: 'https://www.instagram.com/', message: 'ご予約はTableCheckから承っております。', pinRequired: false },
   ],
   news: [
     { store: '全店', title: '社員特典がスタートしました', body: 'いつもありがとうございます。QRコードから認証すると、店内飲食のお会計で特典をご利用いただけます。', start: '', end: '', image: '', link: '', linkLabel: '' },
